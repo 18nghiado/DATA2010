@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 
 # ===== CONFIG =====
@@ -11,7 +12,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 NUMERIC_COLS = ["Open", "High", "Low", "Close", "Volume"]
 
 def clean_crypto_file(input_path, output_path):
-    # Read CSV
+    asset = os.path.splitext(os.path.basename(input_path))[0].upper()
     df = pd.read_csv(input_path)
 
     # Drop rows where Date is missing or not a real date
@@ -28,19 +29,41 @@ def clean_crypto_file(input_path, output_path):
     # Drop rows where all price columns are missing
     df = df.dropna(subset=["Open", "High", "Low", "Close"], how="all")
 
-    # Remove duplicate dates (keep first)
+    # ---------- Remove duplicates & sort ----------
     df = df.drop_duplicates(subset="Date")
+    df = df.sort_values("Date").reset_index(drop=True)
 
-    # Sort by date
-    df = df.sort_values("Date")
+    # ---------- OHLC consistency ----------
+    bad_ohlc = (
+        (df["Low"] > df["High"]) |
+        (df["Open"] < df["Low"]) | (df["Open"] > df["High"]) |
+        (df["Close"] < df["Low"]) | (df["Close"] > df["High"])
+    )
+    df = df[~bad_ohlc]
 
-    # Reset index
+    # ---------- Remove zero-liquidity rows ----------
+    df = df[~((df["Volume"] == 0) & (df["Open"] == df["Close"]))]
+
+    # ---------- Feature engineering ----------
+    #df["asset"] = asset
+
+    df["return"] = df["Close"].pct_change()
+    df["log_return"] = np.log(df["Close"] / df["Close"].shift(1))
+
+    df["vol_7d"] = df["log_return"].rolling(7).std()
+    df["vol_30d"] = df["log_return"].rolling(30).std()
+
+    df["ma_7"] = df["Close"].rolling(7).mean()
+    df["ma_30"] = df["Close"].rolling(30).mean()
+    df["ma_ratio"] = df["ma_7"] / df["ma_30"]
+
+    # ---------- Final tidy ----------
     df = df.reset_index(drop=True)
 
     # Save cleaned file
     df.to_csv(output_path, index=False)
 
-    print(f"Cleaned: {os.path.basename(input_path)}")
+    print(f"Cleaned: {asset}")
 
 
 # ===== RUN FOR ALL FILES =====
