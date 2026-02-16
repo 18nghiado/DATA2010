@@ -1,15 +1,77 @@
 import pandas as pd
 import numpy as np
 import os
+import json
 
 # ===== CONFIG =====
 INPUT_DIR = "crypto_dataset_raw"
 OUTPUT_DIR = "crypto_dataset_cleaned"
+NEWS_FILEPATH = "cryptonews.csv"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Columns that should be numeric
 NUMERIC_COLS = ["Open", "High", "Low", "Close", "Volume"]
+
+def load_daily_sentiment(filepath):
+
+    news = pd.read_csv(filepath)
+    news["Date"] = pd.to_datetime(news["Date"], errors="coerce")
+    news = news.dropna(subset=["Date"])
+
+    news["Date"] = news["Date"].dt.floor("D")
+
+    # Parse JSON safely
+    def parse_sentiment(x):
+        try:
+            if isinstance(x, str):
+                return json.loads(x.replace("'", '"'))
+            return {}
+        except:
+            return {}
+
+    sentiment = news["Sentiment"].apply(parse_sentiment).apply(pd.Series)
+
+    # Convert class to numeric score
+    class_map = {
+        "positive": 1,
+        "neutral": 0,
+        "negative": -1
+    }
+
+    sentiment["score"] = sentiment["class"].map(class_map)
+
+    sentiment["polarity"] = pd.to_numeric(sentiment["polarity"], errors="coerce")
+    sentiment["subjectivity"] = pd.to_numeric(sentiment["subjectivity"], errors="coerce")
+
+    expanded = pd.concat([news["Date"], sentiment], axis=1)
+
+    # Aggregate per day
+    daily = (
+        expanded.groupby("Date")
+        .agg(
+            sentiment_score_mean=("score", "mean"),
+            sentiment_polarity_mean=("polarity", "mean"),
+            sentiment_subjectivity_mean=("subjectivity", "mean"),
+            news_count=("score", "count")
+        )
+        .reset_index()
+    )
+
+    return daily
+
+
+DAILY_SENTIMENT = load_daily_sentiment(NEWS_FILEPATH)
+
+FIRST_NEWS_DATE = DAILY_SENTIMENT["Date"].min()
+LAST_NEWS_DATE = DAILY_SENTIMENT["Date"].max()
+
+SENTIMENT_COLS = [
+    "sentiment_score_mean",
+    "sentiment_polarity_mean",
+    "sentiment_subjectivity_mean",
+    "news_count"
+]
 
 def clean_crypto_file(input_path, output_path):
     asset = os.path.splitext(os.path.basename(input_path))[0].upper()
@@ -43,6 +105,16 @@ def clean_crypto_file(input_path, output_path):
 
     # ---------- Remove zero-liquidity rows ----------
     df = df[~((df["Volume"] == 0) & (df["Open"] == df["Close"]))]
+
+    # ---------- Merge sentiment ----------
+    df = df[df["Date"] >= FIRST_NEWS_DATE]
+
+    df = df.merge(DAILY_SENTIMENT, on="Date", how="left")
+
+    # Forward fill only inside sentiment window
+    mask = (df["Date"] >= FIRST_NEWS_DATE) & (df["Date"] <= LAST_NEWS_DATE)
+
+    df.loc[mask, SENTIMENT_COLS] = df.loc[mask, SENTIMENT_COLS].ffill()
 
     # ---------- Feature engineering ----------
     #df["asset"] = asset
