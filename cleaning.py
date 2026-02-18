@@ -44,7 +44,7 @@ def load_daily_sentiment(filepath):
     sentiment["polarity"] = pd.to_numeric(sentiment["polarity"], errors="coerce")
     sentiment["subjectivity"] = pd.to_numeric(sentiment["subjectivity"], errors="coerce")
 
-    expanded = pd.concat([news["Date"], sentiment], axis=1)
+    expanded = pd.concat([news[["Date", "text"]], sentiment], axis=1)
 
     # Aggregate per day
     daily = (
@@ -53,7 +53,8 @@ def load_daily_sentiment(filepath):
             sentiment_score_mean=("score", "mean"),
             sentiment_polarity_mean=("polarity", "mean"),
             sentiment_subjectivity_mean=("subjectivity", "mean"),
-            news_count=("score", "count")
+            news_count=("score", "count"),
+            news_text=("text", lambda x: ".".join(x.dropna()))
         )
         .reset_index()
     )
@@ -129,7 +130,15 @@ def clean_crypto_file(input_path, output_path):
     df["ma_30"] = df["Close"].rolling(30).mean()
     df["ma_ratio"] = df["ma_7"] / df["ma_30"]
 
-    # ---------- Final tidy ----------
+    # ---------- Labels  ----------
+    df["next_close"] = df["Close"].shift(-1)
+
+    # 1 if next day's close is higher than today's close, else 0
+    df["price_increase"] = (df["next_close"] > df["Close"]).astype("Int64")
+
+    # Set last row to NA explicitly (since next_close is NA)
+    df.loc[df["next_close"].isna(), "price_increase"] = pd.NA
+
     df = df.reset_index(drop=True)
 
     # Save cleaned file
