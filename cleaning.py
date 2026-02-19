@@ -4,9 +4,15 @@ import os
 import json
 
 # ===== CONFIG =====
-INPUT_DIR = "crypto_dataset_raw"
-OUTPUT_DIR = "crypto_dataset_cleaned"
-NEWS_FILEPATH = "cryptonews.csv"
+DATA_DIR = "data"
+
+RAW_DIR = os.path.join(DATA_DIR, "raw")
+TOKEN_DIR = os.path.join(RAW_DIR, "token_datasets")
+SEMANTIC_DIR = os.path.join(RAW_DIR, "semantic")
+
+OUTPUT_DIR = os.path.join(DATA_DIR, "clean")
+
+NEWS_FILEPATH = os.path.join(SEMANTIC_DIR, "cryptonews.csv")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -148,8 +154,11 @@ def clean_crypto_file(input_path, output_path):
 
 
 # ===== RUN FOR ALL FILES =====
-for file in os.listdir(INPUT_DIR):
+for file in os.listdir(TOKEN_DIR):
+
     if file.endswith(".csv"):
-        input_path = os.path.join(INPUT_DIR, file)
+
+        input_path = os.path.join(TOKEN_DIR, file)
         output_path = os.path.join(OUTPUT_DIR, file)
+
         clean_crypto_file(input_path, output_path)
