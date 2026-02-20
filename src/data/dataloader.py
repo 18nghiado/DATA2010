@@ -12,12 +12,6 @@ class Dataloader:
         if path is None:
             raise ValueError("Please specify path")
         self.path = path
-
-    def _normalize(pd_series : pd.Series)-> pd.Series:
-        series_max = pd_series.max()
-        series_min = pd_series.min()
-
-        return (pd_series - series_min)/(series_max - series_min)
         
     def from_csv(
             self,
@@ -41,7 +35,7 @@ class Dataloader:
 
         df['Date'] = pd.to_datetime(df['Date'])
 
-        feats = torch.from_numpy(df[feat_columns].to_numpy())
+        feats = torch.from_numpy(df[feat_columns].to_numpy()).float()
 
 
         time = torch.from_numpy(df['Date'].astype(np.int64).to_numpy()/1_000_000_000)
