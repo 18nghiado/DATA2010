@@ -4,9 +4,15 @@ import os
 import json
 
 # ===== CONFIG =====
-INPUT_DIR = "crypto_dataset_raw"
-OUTPUT_DIR = "crypto_dataset_cleaned"
-NEWS_FILEPATH = "cryptonews.csv"
+DATA_DIR = "data"
+
+RAW_DIR = os.path.join(DATA_DIR, "raw")
+TOKEN_DIR = os.path.join(RAW_DIR, "token_datasets")
+SEMANTIC_DIR = os.path.join(RAW_DIR, "semantic")
+
+OUTPUT_DIR = os.path.join(DATA_DIR, "clean")
+
+NEWS_FILEPATH = os.path.join(SEMANTIC_DIR, "cryptonews.csv")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -130,6 +136,18 @@ def clean_crypto_file(input_path, output_path):
     df["ma_30"] = df["Close"].rolling(30).mean()
     df["ma_ratio"] = df["ma_7"] / df["ma_30"]
 
+    df["return"] = df["return"].fillna(0)
+    df["log_return"] = df["log_return"].fillna(0)
+
+    df["vol_7d"] = df["vol_7d"].fillna(0)
+    df["vol_30d"] = df["vol_30d"].fillna(0)
+
+    df["ma_7"] = df["ma_7"].fillna(0)
+    df["ma_30"] = df["ma_30"].fillna(0)
+
+    df["ma_ratio"] = df["ma_ratio"].fillna(0)
+
+
     # ---------- Labels  ----------
     df["next_close"] = df["Close"].shift(-1)
 
@@ -148,8 +166,11 @@ def clean_crypto_file(input_path, output_path):
 
 
 # ===== RUN FOR ALL FILES =====
-for file in os.listdir(INPUT_DIR):
+for file in os.listdir(TOKEN_DIR):
+
     if file.endswith(".csv"):
-        input_path = os.path.join(INPUT_DIR, file)
+
+        input_path = os.path.join(TOKEN_DIR, file)
         output_path = os.path.join(OUTPUT_DIR, file)
+
         clean_crypto_file(input_path, output_path)
