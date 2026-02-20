@@ -136,6 +136,18 @@ def clean_crypto_file(input_path, output_path):
     df["ma_30"] = df["Close"].rolling(30).mean()
     df["ma_ratio"] = df["ma_7"] / df["ma_30"]
 
+    df["return"] = df["return"].fillna(0)
+    df["log_return"] = df["log_return"].fillna(0)
+
+    df["vol_7d"] = df["vol_7d"].fillna(0)
+    df["vol_30d"] = df["vol_30d"].fillna(0)
+
+    df["ma_7"] = df["ma_7"].fillna(0)
+    df["ma_30"] = df["ma_30"].fillna(0)
+
+    df["ma_ratio"] = df["ma_ratio"].fillna(0)
+
+
     # ---------- Labels  ----------
     df["next_close"] = df["Close"].shift(-1)
 
