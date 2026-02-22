@@ -124,18 +124,9 @@ def clean_crypto_file(input_path, output_path):
     df = df[~((df["Volume"] == 0) & (df["Open"] == df["Close"]))]
 
     # ---------- Merge sentiment ----------
-    df = df[df["Date"] >= FIRST_NEWS_DATE]
-
-    df = df.merge(DAILY_SENTIMENT, on="Date", how="left")
-
-    # Forward fill only inside sentiment window
-    mask = (df["Date"] >= FIRST_NEWS_DATE) & (df["Date"] <= LAST_NEWS_DATE)
-
-    df.loc[mask, SENTIMENT_COLS] = df.loc[mask, SENTIMENT_COLS].ffill()
+    df = df.merge(DAILY_SENTIMENT, on="Date", how="inner")
 
     # ---------- Feature engineering ----------
-    #df["asset"] = asset
-
     df["return"] = df["Close"].pct_change()
     df["log_return"] = np.log(df["Close"] / df["Close"].shift(1))
 
