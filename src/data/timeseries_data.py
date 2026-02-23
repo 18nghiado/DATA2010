@@ -9,6 +9,7 @@ class TimeSeriesDataset:
     time: torch.Tensor
     x : torch.Tensor
     y: torch.Tensor
+    feat_map : dict
 
 
     def split(self, time_value) -> Tuple['TimeSeriesDataset', 'TimeSeriesDataset']:
@@ -16,11 +17,13 @@ class TimeSeriesDataset:
         return TimeSeriesDataset(
             time=self.time[mask],
             y=self.y[mask],
-            x=self.x[mask]
+            x=self.x[mask],
+            feat_map=self.feat_map,
         ), TimeSeriesDataset(
             time=self.time[~mask],
             y=self.y[~mask],
-            x=self.x[~mask]
+            x=self.x[~mask],
+            feat_map=self.feat_map
         )
 
 

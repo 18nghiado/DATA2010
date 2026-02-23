@@ -35,7 +35,12 @@ class Dataloader:
 
         df['Date'] = pd.to_datetime(df['Date'])
 
+        df = df[df['Date'] <= '2023-12-19'] # Remove this when preprocess data is updated
+
+
         feats = torch.from_numpy(df[feat_columns].to_numpy()).float()
+
+        feat_map = {feat: idx for idx, feat in enumerate(feat_columns)}
 
 
         time = torch.from_numpy(df['Date'].astype(np.int64).to_numpy()/1_000_000_000)
@@ -43,6 +48,7 @@ class Dataloader:
         return TimeSeriesDataset(
             time=time,
             y=labels,
-            x = feats
+            x = feats,
+            feat_map= feat_map
         )
 
