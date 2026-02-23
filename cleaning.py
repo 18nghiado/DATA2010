@@ -84,6 +84,9 @@ def clean_crypto_file(input_path, output_path):
     asset = os.path.splitext(os.path.basename(input_path))[0].upper()
     df = pd.read_csv(input_path)
 
+    # Convert blank / whitespace cells to NaN
+    df = df.replace(r'^\s*$', np.nan, regex=True)
+
     # Drop rows where Date is missing or not a real date
     df = df[df["Date"].notna()]
 
