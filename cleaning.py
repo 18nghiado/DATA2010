@@ -84,6 +84,9 @@ def clean_crypto_file(input_path, output_path):
     asset = os.path.splitext(os.path.basename(input_path))[0].upper()
     df = pd.read_csv(input_path)
 
+    # Convert blank / whitespace cells to NaN
+    df = df.replace(r'^\s*$', np.nan, regex=True)
+
     # Drop rows where Date is missing or not a real date
     df = df[df["Date"].notna()]
 
@@ -94,6 +97,16 @@ def clean_crypto_file(input_path, output_path):
     # Convert numeric columns
     for col in NUMERIC_COLS:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        
+    for col in NUMERIC_COLS:
+        # Convert empty strings or invalid to NaN
+        df[col] = df[col].replace("", np.nan)
+
+        # Fill NaN with median of that column
+        median_value = df[col].median()
+
+        df[col] = df[col].fillna(median_value)
 
     # Drop rows where all price columns are missing
     df = df.dropna(subset=["Open", "High", "Low", "Close"], how="all")
@@ -114,18 +127,9 @@ def clean_crypto_file(input_path, output_path):
     df = df[~((df["Volume"] == 0) & (df["Open"] == df["Close"]))]
 
     # ---------- Merge sentiment ----------
-    df = df[df["Date"] >= FIRST_NEWS_DATE]
-
-    df = df.merge(DAILY_SENTIMENT, on="Date", how="left")
-
-    # Forward fill only inside sentiment window
-    mask = (df["Date"] >= FIRST_NEWS_DATE) & (df["Date"] <= LAST_NEWS_DATE)
-
-    df.loc[mask, SENTIMENT_COLS] = df.loc[mask, SENTIMENT_COLS].ffill()
+    df = df.merge(DAILY_SENTIMENT, on="Date", how="inner")
 
     # ---------- Feature engineering ----------
-    #df["asset"] = asset
-
     df["return"] = df["Close"].pct_change()
     df["log_return"] = np.log(df["Close"] / df["Close"].shift(1))
 
