@@ -49,6 +49,7 @@ class Dataloader:
             time=time,
             y=labels,
             x = feats,
-            feat_map= feat_map
+            feat_map= feat_map,
+            dataset_name=csv_file_name
         )
 
