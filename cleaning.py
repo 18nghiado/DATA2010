@@ -158,8 +158,8 @@ def clean_crypto_file(input_path, output_path):
     # 1 if next day's close is higher than today's close, else 0
     df["price_increase"] = (df["next_close"] > df["Close"]).astype("Int64")
 
-    # Set last row to NA explicitly (since next_close is NA)
-    df.loc[df["next_close"].isna(), "price_increase"] = pd.NA
+    # Set last row to nan explicitly (since next_close is NA)
+    df.loc[df["next_close"].isna(), "price_increase"] = np.nan
 
     df = df.reset_index(drop=True)
 
