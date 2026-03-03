@@ -100,9 +100,6 @@ def clean_crypto_file(input_path, output_path):
 
         
     for col in NUMERIC_COLS:
-        # Convert empty strings or invalid to NaN
-        df[col] = df[col].replace("", np.nan)
-
         # Fill NaN with median of that column
         median_value = df[col].median()
 
