@@ -6,9 +6,19 @@ from typing import Tuple, List
 
 from .timeseries_data import TimeSeriesDataset
 
+"""
+Load raw data to memory
 
+"""
 class Dataloader:
-    def __init__(self, path):
+    """r
+    Load raw data into memory and return `TimeSeriesDataset` for each data.
+
+    Args:
+        - `path`(str): path to directory that raw data is stored
+    
+    """
+    def __init__(self, path: str):
         if path is None:
             raise ValueError("Please specify path")
         self.path = path
@@ -18,9 +28,17 @@ class Dataloader:
             csv_file_name:str,
             label_column,
             feat_columns : None | List[str] = [],
-            
+    ) -> TimeSeriesDataset:
+        r"""
+        Load raw data from CSV into memory and return `TimeSeriesDataset` for each data
 
-    ) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
+        Args:
+            - `csv_file_name` (str): Name of the file that need to load
+            - `label_column`(str): which column is considered as label vector
+            - `feat_columns` (List): List of features columns
+
+        Return: `TimeSeriesDataset` dataset
+        """
         if not os.path.isfile(os.path.join(self.path, csv_file_name)):
             raise FileExistsError(f"{csv_file_name} doesn't not exist in {self.path}")
         
