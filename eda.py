@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import seaborn as sns
 
 CLEAN_DIR = "data/clean"
 
@@ -18,7 +18,7 @@ full_df = pd.concat(all_dfs, ignore_index=True)
 full_df["Date"] = pd.to_datetime(full_df["Date"])
 full_df = full_df.sort_values(["asset", "Date"])
 
-# normalize per asset using first Close (same start date across assets)
+# normalize per asset using first Close
 full_df["normalized_price"] = full_df["Close"] / full_df.groupby("asset")["Close"].transform("first")
 
 market_index = (
@@ -27,18 +27,28 @@ market_index = (
     .reset_index()
 )
 
+btc_df = full_df[full_df["asset"] == "bitcoin"].copy()
+
+btc_df["btc_normalized"] = (
+    btc_df["Close"] / btc_df["Close"].iloc[0]
+)
+
 # Visual 1
 plt.figure(figsize=(12,6))
-plt.plot(market_index["Date"], market_index["normalized_price"])
-plt.title("Crypto Market Index (Median of Normalized Prices)")
-plt.ylabel("Normalized Price (relative to 2021-10-12)")
-plt.xlabel("Date")
 
-ax = plt.gca()
-ax.xaxis.set_major_locator(mdates.YearLocator())
-ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+plt.plot(market_index["Date"],market_index["normalized_price"],label="Market Index (Median)")
+
+plt.plot(btc_df["Date"],btc_df["btc_normalized"],label="Bitcoin")
+
+plt.title("Crypto Market Index vs Bitcoin Price")
+plt.ylabel("Normalized Price")
+plt.xlabel("Date")
+plt.legend()
+
 plt.tight_layout()
+plt.savefig("fig1_market_index.png", dpi=300, bbox_inches="tight")
 plt.show()
+
 
 # Visual 2
 
@@ -85,7 +95,9 @@ ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
 
 plt.title("Market Index vs Average Sentiment (30-Day Rolling)")
 plt.tight_layout()
+plt.savefig("fig2_market_vs_sentiment.png", dpi=300, bbox_inches="tight")
 plt.show()
+
 
 # Visual 3
 
@@ -101,7 +113,9 @@ vol_df = market_index.dropna(subset=["vol_30d"])
 plt.plot(vol_df["Date"], vol_df["vol_30d"])
 plt.title("30-Day Rolling Volatility of Crypto Market Index")
 plt.ylabel("Volatility")
+plt.savefig("fig3_rolling_volatility.png", dpi=300, bbox_inches="tight")
 plt.show()
+
 
 # Visual 4
 dispersion = (
@@ -121,7 +135,7 @@ dispersion.loc[dispersion["Date"] >= "2023-01-01", "period"] = "Recovery 2023"
 
 
 plt.figure(figsize=(8,6))
-import seaborn as sns
+
 order = ["Pre-Crash", "Crash 2022", "Recovery 2023"]
 sns.boxplot(x="period", y="iqr", data=dispersion, order=order)
 
@@ -129,10 +143,6 @@ plt.title("Cross-Asset Dispersion by Market Period")
 plt.ylabel("IQR of Normalized Prices")
 plt.xlabel("Market Period")
 plt.tight_layout()
+plt.savefig("fig4_dispersion_by_period.png", dpi=300, bbox_inches="tight")
 plt.show()
 
-
-plt.savefig("fig1_market_index.png", dpi=300, bbox_inches="tight")
-plt.savefig("fig2_market_vs_sentiment.png", dpi=300, bbox_inches="tight")
-plt.savefig("fig3_rolling_volatility.png", dpi=300, bbox_inches="tight")
-plt.savefig("fig4_dispersion_by_period.png", dpi=300, bbox_inches="tight")
