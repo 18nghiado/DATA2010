@@ -98,4 +98,4 @@ jupyter notebook experiments_standard_pipeline.ipynb
 ## Contributors
 
 - [Bao Ngo](https://github.com/benjaminnNgo)   - 7951466
-- [Duc Nghia Do](https://github.com/18nghiado) - 
+- [Duc Nghia Do](https://github.com/18nghiado) - 7934473
