@@ -36,14 +36,21 @@ btc_df["btc_normalized"] = (
 # Visual 1
 plt.figure(figsize=(12,6))
 
-plt.plot(market_index["Date"],market_index["normalized_price"],label="Market Index (Median)")
+plt.plot(market_index["Date"], market_index["normalized_price"],
+         label="Market Index (Median)")
 
-plt.plot(btc_df["Date"],btc_df["btc_normalized"],label="Bitcoin")
+plt.plot(btc_df["Date"], btc_df["btc_normalized"],
+         label="Bitcoin")
 
-plt.title("Crypto Market Index vs Bitcoin Price")
-plt.ylabel("Normalized Price")
-plt.xlabel("Date")
-plt.legend()
+plt.title("Crypto Market Index vs Bitcoin Price", fontsize=30)
+
+plt.ylabel("Normalized Price", fontsize=28)
+plt.xlabel("Date", fontsize=28)
+
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+plt.legend(fontsize=30)
 
 plt.tight_layout()
 plt.savefig("fig1_market_index.png", dpi=300, bbox_inches="tight")
@@ -77,7 +84,10 @@ ax1.plot(
     market_index_smooth["normalized_price_smooth"],
     label="Market Index (30d MA)"
 )
-ax1.set_ylabel("Normalized Price")
+ax1.set_ylabel("Normalized Price", fontsize=28)
+ax1.set_xlabel("Date", fontsize=28)
+ax1.tick_params(axis="x", labelsize=15)
+ax1.tick_params(axis="y", labelsize=15)
 
 # Second y-axis for sentiment
 ax2 = ax1.twinx()
@@ -87,13 +97,14 @@ ax2.plot(
     color="orange",
     label="Average Sentiment (30d MA)"
 )
-ax2.set_ylabel("Average Sentiment Score")
+ax2.set_ylabel("Average Sentiment Score", fontsize=28)
+ax2.tick_params(axis="y", labelsize=15)
 
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
-ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right", fontsize=30)
 
-plt.title("Market Index vs Average Sentiment (30-Day Rolling)")
+plt.title("Market Index vs Average Sentiment (30-Day Rolling)", fontsize=30)
 plt.tight_layout()
 plt.savefig("fig2_market_vs_sentiment.png", dpi=300, bbox_inches="tight")
 plt.show()
@@ -111,8 +122,11 @@ market_index["vol_30d"] = market_index["log_return"].rolling(30).std()
 plt.figure(figsize=(12,6))
 vol_df = market_index.dropna(subset=["vol_30d"])
 plt.plot(vol_df["Date"], vol_df["vol_30d"])
-plt.title("30-Day Rolling Volatility of Crypto Market Index")
-plt.ylabel("Volatility")
+plt.title("30-Day Rolling Volatility of Crypto Market Index", fontsize=30)
+plt.ylabel("Volatility", fontsize=28)
+plt.xlabel("Date", fontsize=28)
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
 plt.savefig("fig3_rolling_volatility.png", dpi=300, bbox_inches="tight")
 plt.show()
 
@@ -134,15 +148,17 @@ dispersion.loc[
 dispersion.loc[dispersion["Date"] >= "2023-01-01", "period"] = "Recovery 2023"
 
 
-plt.figure(figsize=(8,6))
+plt.figure(figsize=(12,6))
 
 order = ["Pre-Crash", "Crash 2022", "Recovery 2023"]
 sns.boxplot(x="period", y="iqr", data=dispersion, order=order)
 
-plt.title("Cross-Asset Dispersion by Market Period")
-plt.ylabel("IQR of Normalized Prices")
-plt.xlabel("Market Period")
-plt.tight_layout()
+plt.title("Cross-Asset Dispersion by Market Period", fontsize=30)
+plt.ylabel("IQR of Normalized Prices", fontsize=28)
+plt.xlabel("Market Period", fontsize=28)
+
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
 plt.savefig("fig4_dispersion_by_period.png", dpi=300, bbox_inches="tight")
 plt.show()
 
