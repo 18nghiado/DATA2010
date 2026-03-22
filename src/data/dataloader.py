@@ -1,5 +1,4 @@
 import pandas as pd
-import torch 
 import os
 import numpy as np
 from typing import Tuple, List
@@ -28,6 +27,7 @@ class Dataloader:
             csv_file_name:str,
             label_column,
             feat_columns : None | List[str] = [],
+            window_size : int = 1
     ) -> TimeSeriesDataset:
         r"""
         Load raw data from CSV into memory and return `TimeSeriesDataset` for each data
@@ -36,6 +36,7 @@ class Dataloader:
             - `csv_file_name` (str): Name of the file that need to load
             - `label_column`(str): which column is considered as label vector
             - `feat_columns` (List): List of features columns
+            - `window_size` (int): window size
 
         Return: `TimeSeriesDataset` dataset
         """
@@ -56,18 +57,19 @@ class Dataloader:
         df = df[df['Date'] <= '2023-12-19'] # Remove this when preprocess data is updated
 
 
-        feats = torch.from_numpy(df[feat_columns].to_numpy()).float()
+        feats = df[feat_columns].to_numpy()
 
         feat_map = {feat: idx for idx, feat in enumerate(feat_columns)}
 
 
-        time = torch.from_numpy(df['Date'].astype(np.int64).to_numpy()/1_000_000_000)
-        labels = torch.from_numpy(df[label_column].to_numpy()).unsqueeze(-1)
+        time = df['Date'].astype(np.int64).to_numpy()/1_000_000_000
+        labels = df[label_column].to_numpy()
         return TimeSeriesDataset(
             time=time,
             y=labels,
             x = feats,
             feat_map= feat_map,
-            dataset_name=csv_file_name
+            dataset_name=csv_file_name,
+            window_size=window_size
         )
 

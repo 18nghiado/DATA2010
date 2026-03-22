@@ -58,7 +58,7 @@ venv\Scripts\activate           # Windows
 ### 3. Install dependencies
 
 ```bash
-pip install torch scikit-learn pandas numpy matplotlib seaborn jupyter
+pip install tensorflow scikit-learn pandas numpy matplotlib seaborn jupyter
 ```
 
 ---
