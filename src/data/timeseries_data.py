@@ -1,8 +1,8 @@
 
-import torch
 from dataclasses import dataclass
 from typing import Iterator, Tuple
 import pandas as pd
+import numpy as np
 
 @dataclass
 class TimeSeriesDataset:
@@ -10,17 +10,18 @@ class TimeSeriesDataset:
     A dataclass representing a time series dataset with features and labels.
 
     Args:
-        - `time` (torch.Tensor): 1D tensor of UNIX timestamps (in seconds)
-        - `x` (torch.Tensor): 2D feature tensor of shape `(N, num_features)`
-        - `y` (torch.Tensor): Label tensor of shape `(N, 1)`
+        - `time` (np.ndarray): 1D tensor of UNIX timestamps (in seconds)
+        - `x` (np.ndarray): 2D feature tensor of shape `(N, num_features)`
+        - `y` (np.ndarray): Label tensor of shape `(N, 1)`
         - `feat_map` (dict): Mapping from feature name to its column index in `x`
         - `dataset_name` (str): Name of the source dataset or CSV file
     """
-    time: torch.Tensor
-    x : torch.Tensor
-    y: torch.Tensor
+    time: np.ndarray
+    x : np.ndarray
+    y: np.ndarray
     feat_map : dict
     dataset_name : str
+    window_size : int = 1,
 
 
     def split(self, time_value) -> Tuple['TimeSeriesDataset', 'TimeSeriesDataset']:
@@ -70,23 +71,31 @@ class TimeSeriesDataset:
         val_end = train_end + round(n * val)
 
         return (
-            TimeSeriesDataset(time=self.time[:train_end],x=self.x[:train_end],y=self.y[:train_end],feat_map=self.feat_map, dataset_name= self.dataset_name),
-            TimeSeriesDataset(time=self.time[train_end:val_end], x=self.x[train_end:val_end], y=self.y[train_end:val_end], feat_map=self.feat_map, dataset_name=self.dataset_name),
-            TimeSeriesDataset(time=self.time[val_end:],x=self.x[val_end:],y=self.y[val_end:],feat_map=self.feat_map, dataset_name= self.dataset_name),
+            TimeSeriesDataset(time=self.time[:train_end],x=self.x[:train_end],y=self.y[:train_end],feat_map=self.feat_map, dataset_name= self.dataset_name, window_size=self.window_size),
+            TimeSeriesDataset(time=self.time[train_end:val_end], x=self.x[train_end:val_end], y=self.y[train_end:val_end], feat_map=self.feat_map, dataset_name=self.dataset_name, window_size=self.window_size),
+            TimeSeriesDataset(time=self.time[val_end:],x=self.x[val_end:],y=self.y[val_end:],feat_map=self.feat_map, dataset_name= self.dataset_name, window_size=self.window_size),
         )
 
 
-    def __iter__(self) -> Iterator[Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]:
+    def __iter__(self) -> Iterator[Tuple[np.ndarray, np.ndarray,np.ndarray, np.ndarray]]:
         r"""
         Iterate over samples in the dataset.
 
         Yields: Tuple of `(time_i, x_i, y_i)` for each sample `i`:
-            - `time_i` (torch.Tensor): scalar timestamp
-            - `x_i`    (torch.Tensor): 1D feature vector of shape `(num_features,)`
-            - `y_i`    (torch.Tensor): label of shape `(1,)`
+            - `time_i` (np.ndarray): scalar timestamp
+            - `x_i`    (np.ndarray): 1D feature vector of shape `(num_features,)`
+            - `y_i`    (np.ndarray): label of shape `(1,)`
         """
         for i in range(len(self.time)):
-            yield self.time[i], self.x[i]  ,self.y[i]
+            if self.window_size == 1:
+                yield self.time[i], self.x[i]  ,self.y[i]
+            else:
+                if i < self.window_size:
+                    pad_time = np.concatenate((np.zeros(self.window_size - i -1), self.time[:i + 1]),axis=0)
+                    pad_x = np.concatenate((np.zeros((self.window_size - i - 1, self.x.shape[1]), dtype=self.x.dtype), self.x[:i + 1]),axis=0)
+                    yield pad_time, pad_x, self.y[i]
+                else:
+                    yield self.time[i + 1 - self.window_size:i + 1], self.x[i + 1-self.window_size:i + 1]  ,self.y[i]
 
     def __len__(self) -> int:
         r"""
