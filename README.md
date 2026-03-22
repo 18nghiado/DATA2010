@@ -22,11 +22,14 @@ DATA2010/
 |   ├── data
 │   │  ├── timeseries_data.py               # TimeSeriesDataset dataclass with split utilities
 │   │  └── dataloader.py                    # Dataloader class for reading CSV into TimeSeriesDataset
-│   └── utils                               
-│      └── seed.py                          # Seed for reproduce
-├── cleaning.py                             # Data cleaning script
+│   ├── utils                               
+│   |   └── seed.py                         # Seed for reproduce
+│   └─ pipelines
+│      ├── cleaning.py                      # Data cleaning script 
+│      └── eda.py                           # Exploratory Data Analysis and Visualization script   
 ├── cleaning.ipynb                          # Interactive data cleaning notebook
 ├── experiments_standard_pipeline.ipynb     # Baseline sklearn pipeline experiments
+├── EDA_Report_Notebook                     # Interactive EDA and Visualization notebook
 ├── .gitignore
 └── README.md
 ```

@@ -4,7 +4,8 @@ import os
 import json
 
 # ===== CONFIG =====
-DATA_DIR = "data"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_DIR = os.path.join(BASE_DIR, "data")
 
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 TOKEN_DIR = os.path.join(RAW_DIR, "token_datasets")
@@ -100,9 +101,6 @@ def clean_crypto_file(input_path, output_path):
 
         
     for col in NUMERIC_COLS:
-        # Convert empty strings or invalid to NaN
-        df[col] = df[col].replace("", np.nan)
-
         # Fill NaN with median of that column
         median_value = df[col].median()
 
@@ -158,8 +156,8 @@ def clean_crypto_file(input_path, output_path):
     # 1 if next day's close is higher than today's close, else 0
     df["price_increase"] = (df["next_close"] > df["Close"]).astype("Int64")
 
-    # Set last row to NA explicitly (since next_close is NA)
-    df.loc[df["next_close"].isna(), "price_increase"] = pd.NA
+    # Set last row to nan explicitly (since next_close is NA)
+    df.loc[df["next_close"].isna(), "price_increase"] = np.nan
 
     df = df.reset_index(drop=True)
 
